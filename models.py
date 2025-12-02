@@ -67,14 +67,10 @@ class InputFusionNet(nn.Module):
         
         return x
 
-if __name__ == "__main__":
-    # Test con TUS dimensiones reales
-    print("--- Test con dimensiones reales del proyecto ---")
-    model = InputFusionNet(input_channels=1, num_electrodes=21, time_length=128)
-    
-    # Simulamos un batch de 8 ventanas
-    inp = torch.randn(8, 1, 21, 128) 
-    out = model(inp)
-    
-    print(f"Input shape: {inp.shape}")
-    print(f"Output shape: {out.shape}") # Debería ser (8, 1)
+class FeatureFusionNet(nn.Module):
+    """
+    Opción 2: Fusión a Nivel de Características (Feature Level Fusion) - CNN 1D por canal
+    Esta arquitectura procesa cada canal EEG individualmente y luego fusiona las características
+    *Input Shape: (Batch, 21, 128)
+    """
+    pass # !!!!!!!!!!!!!!!!!!! IMPLEMENTAR 
