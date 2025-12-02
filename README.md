@@ -6,7 +6,7 @@
 
 - NO des del punt de vista de detector d'anomalies, fer clasificador!
 
-- opcio 1: Fer una xarxa, RGB amb una primera capa que rebi com a entrada (Ncanals, nhidden, __  ) fusio a nivell de input --> Fusion of EEG channels at input level (like image CNNs)
+- opcio 1: Fer una xarxa, RGB amb una primera capa que rebi com a entrada (Ncanals, nhidden, l=128  ) fusio a nivell de input --> Fusion of EEG channels at input level (like image CNNs)
 
 - opcio 2: en lloc de primer resumir i despres extraure informació, fusio a nivel de feature -->Fusion of EEG channels at feature level (after extracting relevant features for each sensor)
 
