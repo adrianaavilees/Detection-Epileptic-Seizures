@@ -1,1 +1,1 @@
-# Detection-Epileptic-Seizures-
+# Detection-Epileptic-Seizures
