@@ -6,6 +6,7 @@ from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 from eeg_dataset import EEGSeizureDataset
 from models import InputFusionNet, FeatureFusionNet
@@ -16,6 +17,9 @@ K_FOLDS = 5
 BATCH_SIZE = 64
 EPOCHS_PER_FOLD = 5    
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+OUTPUT_DIR = "models" 
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def calculate_metrics(y_true, y_probs, threshold=0.5):
     """Calcula métricas binarias basadas en un umbral predefinido"""
@@ -69,6 +73,12 @@ def run_cross_validation_complete(model_class, dataset, model_name="Model"):
                 loss = criterion(out, y.unsqueeze(1))
                 loss.backward()
                 optimizer.step()
+        
+        # GUARDAR EL MODELO
+        clean_name = model_name.replace(" ", "_").replace("(", "").replace(")", "")
+        save_path = os.path.join(OUTPUT_DIR, f"{clean_name}_fold{fold+1}.pth")
+        torch.save(model.state_dict(), save_path)
+        print(f"Modelo guardado: {save_path}")
         
         # Evaluación
         model.eval()

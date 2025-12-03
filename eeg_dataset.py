@@ -53,7 +53,8 @@ class EEGSeizureDataset(Dataset):
                     self.samples_index.append({
                         'npz_path': npz_path,
                         'idx': idx,
-                        'label': label
+                        'label': label,
+                        'patient': patient_id
                     })
                     
             except Exception as e:
