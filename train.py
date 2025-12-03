@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 import numpy as np
 
 from eeg_dataset import EEGSeizureDataset
-from models import InputFusionNet
+from models import InputFusionNet, FeatureFusionNet
 
 DATA_PATH = '/export/fhome/maed/EpilepsyDataSet/'
 MODEL_PATH = 'baseline_input_fusion.pth'  #!!!!!!!!!!!!!!!! Cambia esto si usas otro modelo
@@ -39,12 +39,18 @@ def train_model():
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
 
     # MODELO OPCION 1: InputFusionNet
-    model = InputFusionNet(
-        input_channels=INPUT_CHANNELS, 
-        num_electrodes=NUM_CHANNELS, 
+    # model = InputFusionNet(
+    #     input_channels=INPUT_CHANNELS, 
+    #     num_electrodes=NUM_CHANNELS, 
+    #     time_length=NUM_SAMPLES
+    # ).to(device)
+    
+    # MODELO OPCION 2: FeatureFusionNet
+    model = FeatureFusionNet(
+        num_electrodes=NUM_CHANNELS,
         time_length=NUM_SAMPLES
     ).to(device)
-    
+
     # Definir Loss y Optimizador
     # PosW (Positive Weight): Útil si hay muchas menos crisis que ventanas normales
     # Aumentarlo (ej. torch.tensor([5.0])) si el dataset está muy desbalanceado

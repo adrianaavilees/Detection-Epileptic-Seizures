@@ -69,8 +69,77 @@ class InputFusionNet(nn.Module):
 
 class FeatureFusionNet(nn.Module):
     """
-    Opción 2: Fusión a Nivel de Características (Feature Level Fusion) - CNN 1D por canal
+    Opción 2: Fusión a Nivel de Características (Feature Level Fusion) 
     Esta arquitectura procesa cada canal EEG individualmente y luego fusiona las características
     *Input Shape: (Batch, 21, 128)
     """
-    pass # !!!!!!!!!!!!!!!!!!! IMPLEMENTAR 
+    def __init__(self, num_electrodes=21, time_length=128):
+        """
+        Args:
+            num_electrodes (int): 21 (Número de electrodos)
+            time_length (int): 128 (Longitud temporal de la ventana)
+        """
+        super(FeatureFusionNet, self).__init__()
+        self.num_electrodes = num_electrodes
+        self.time_length = time_length
+        
+        #* Extractor de Características (Compartido para cada canal)
+        # Usamos Conv1D porque analizamos una sola señal temporal a la vez
+        self.feature_extractor = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=8, kernel_size=5, padding=2),
+            nn.BatchNorm1d(8),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2), # 128 -> 64
+            
+            nn.Conv1d(in_channels=8, out_channels=16, kernel_size=3, padding=1),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2), # 64 -> 32
+            
+            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2)  # 32 -> 16
+        )
+        
+        # Dimensión de salida del extractor por CADA canal:
+        # 32 filtros * 16 muestras temporales = 512 features por canal
+        self.features_per_channel = 32 * (time_length // 8) 
+        
+        # --- Clasificador (Fusion) ---
+        # Entrada: Features por canal * Número de canales
+        self.fusion_dim = self.features_per_channel * num_electrodes
+        
+        self.classifier = nn.Sequential(
+            nn.Linear(self.fusion_dim, 256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(64, 1) 
+        )
+
+    def forward(self, x):
+        # x shape: (Batch, 1, Canales, Tiempo)
+        batch_size = x.size(0)
+        
+        # Reorganizar para procesar cada canal independientemente (Batch * Canales, 1, Tiempo)
+        # Quitamos la dimensión 1 (color) que no sirve aquí 
+        x = x.squeeze(1) # (Batch, Canales, Tiempo)
+        x = x.view(batch_size * self.num_electrodes, 1, self.time_length)
+        
+        # Extracción de Features (Red Siamese)
+        feats = self.feature_extractor(x) # (Batch*Canales, 32, 16)
+        
+        # Aplanar features individuales 
+        feats = feats.view(batch_size * self.num_electrodes, -1) # (Batch*Canales, FeaturesPerChannel)
+        
+        # Fusión (Concatenación)
+        # Volvemos a separar Batch y Canales para concatenarlos lateralmente
+        feats = feats.view(batch_size, self.num_electrodes * self.features_per_channel)
+        
+        # Clasificación
+        out = self.classifier(feats)
+        
+        return out
